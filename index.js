@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 4000;
 
 /* MIDDLEWARE */
 app.use(cors());
@@ -21,18 +21,17 @@ async function run() {
   try {
     await client.connect();
     const productsCollection = client.db("emaJohn").collection("products");
-
-    /* GET AND READ ALL PRODUCTS: http://localhost:5000/products */
+    /* read all data : http://localhost:4000/products */
     app.get("/products", async (req, res) => {
       const page = parseInt(req.query.page);
-      const pageNumber = parseInt(req.query.pageNumber);
+      const productsNumber = parseInt(req.query.productsNumber);
       const query = {};
       const cursor = productsCollection.find(query);
       let products;
-      if (page || pageNumber) {
+      if (page || productsNumber) {
         products = await cursor
-          .skip(page * pageNumber)
-          .limit(pageNumber)
+          .skip(page * productsNumber)
+          .limit(productsNumber)
           .toArray();
       } else {
         products = await cursor.toArray();
@@ -40,10 +39,9 @@ async function run() {
 
       res.send(products);
     });
-    /* COUNT FOR PAGINATION */
-    app.get("/productsCount", async (req, res) => {
-      const query = {};
-      const cursor = productsCollection.find(query);
+
+    /* FOR PAGINATION: http://localhost:4000/products */
+    app.get("/productCount", async (req, res) => {
       const count = await productsCollection.estimatedDocumentCount();
       res.send({ count });
     });
@@ -51,14 +49,9 @@ async function run() {
     /* use post to get products by ids */
     app.post("/productByKeys", async (req, res) => {
       const keys = req.body;
-      const ids = keys.map(id=>ObjectId(id))
+      /* const ids = keys.map(id=>ObjectId(id));
       console.log(ids);
-      
-
-     /*  const query = { _id: { $in: ids } };
-      const cursor = productsCollection.find(query);
-      const products = await cursor.toArray();
-      res.send(products); */
+ */
     });
   } finally {
   }
